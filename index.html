@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <title>Sample Form</title>
+ <meta charset="utf-8"> 
+ <link href="dist/css/bootstrap.min.css" rel="stylesheet">
+ <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+ <!-- This file was created for a Salestream test-run
+   By Francisco Velazquez
+  the following links need to be available and accessible by this file
+   http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css
+   https://code.jquery.com/jquery-1.10.2.min.js
+   http://platform.twitter.com/widgets.js
+   http://code.jquery.com/ui/1.10.3/jquery-ui.js
+
+  -->  
+ <style type="text/css">
+  /*pallet #7D1935 #4A96AD #F5F3EE #FFFFFF*/
+   body{
+    color:#10044E;
+   } 
+   .ui-dialog-titlebar{
+     background: #4A96AD !important;
+    }
+   .container{
+      width:700px;
+      margin-top:40px;
+   }
+   div#datacontainer-modal{
+     min-height:200px;
+     max-height:200px;
+     overflow:auto;
+     min-width:600px;
+     display:block;
+     border:1px solid gray;
+     padding-left:20px; 
+  } 
+    .navbar-default{
+     background-color:#F7CFE1;
+    }
+    
+   .table{
+    width:100px;
+   }
+   table#datacontainer-modal thead,
+   table#datacontainer-modal tbody{
+     display:block;
+     float:left;
+     width:600px !important;
+   }
+   table#datacontainer-modal{
+    border:1px solid #acacac;
+   }
+   table th, table td{
+     width:100px;
+   }  
+   table th+th, table td+td{
+     width:250px !important;
+   }
+   table#datacontainer-modal tbody{
+    height:200px;
+    overflow:auto;
+   } 
+   div.input-group.adjustwidth{
+     max-width:300px;
+   }
+   div.input-group.adjustwidth input[type=text]{
+     width:280px;
+   }
+   div #submitDel,
+   div.input-group.adjustwidth label, 
+   div.input-group.adjustwidth textarea, 
+   div.input-group.adjustwidth input[type=submit], 
+   div.input-group.adjustwidth input[type=text]{
+    margin:5px 10px;
+   }
+   div.input-group.adjustwidth textarea{
+    height:100px;
+    width:280px;
+   } 
+   .errorno{
+    display:none;
+    }
+   .error{
+     display:block;
+     top:-20px; 
+     background-color:#ffacac; 
+   }
+   .errorno.error{
+      color:white;
+      background-color:#4d4d4d;
+    }
+ </style>
+
+</head>
+<body>
+<div class="navbar navbar-default"><div class="navbar-header"> <h1>Welcome to the Sample Form Widget</h1></div></div>
+<div class="container">
+  <!-- First form -->
+ <form class="form-horizontal well " data-async data-target="#datacontainer-modal" id="dialog-form-1"  action="handler.php" method="POST">
+  <div class='col-lg-6'> 
+  <fieldset> 
+   <table id="datacontainer-modal" class="table table-striped"> 
+    <thead>
+          <tr class="ui-widget-header">
+             <th>Delete</th>
+             <th>Name</th>
+             <th>Comment</th>
+         </tr>
+     </thead>
+     <tbody>
+
+     </tbody>  
+   </table>
+
+   <input  type="hidden"  id="action2" name="action" value="Delete Record">
+   <input type="submit" class="btn btn-sm" id="submitDel" value="Delete Record"> 
+   <button class="btn btn-sm adjustwidth" id="submitAdd"> Add Record</button>
+   </fieldset> 
+ </div>
+   <div class="clearfix"></div>
+ </form>
+
+ <!-- Second Form -->
+ <form data-async-add data-target="#datacontainer-modal" id="dialog-form" action="handler.php" method="POST">
+   <div class="input-group adjustwidth col-lg-4 ">
+     <fieldset>
+      <input  type="hidden"  id="action" name="action" value="Add Record">
+      <label for="action">Name:</label> 
+      <input class="input-sm" type="text" name="name" id="name">
+      <label for="comment">Comment:</label>
+      <input type="hidden" name="resetajax" id="resetajax" value="1">
+      <textarea class="input-sm" col="100" row="3" name="comment" id="comment"></textarea>
+      <span class="errorno"></span>  
+   </fieldset> 
+   </div>
+</form>
+   <div class="clearfix"></div>
+</div>
+  <!--We call some external and internal library files here -->
+  <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="dist/js/bootstrap.js"></script>
+  <script src="dist/js/jquery.validate.min.js"></script>
+  <script src="dist/js/bootstrap.js"></script>
+  <script src="http://platform.twitter.com/widgets.js"></script>
+  <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+ 
+  <script>
+   //All the custome jQuery parts are included in this same file for ease of review
+   jQuery(function($) {
+    //Override the checkForm function in Validator 
+    $.validator.addMethod("checkForm", function() {
+        this.prepareForm();
+        for ( var i = 0, elements = (this.currentElements = this.elements()); elements[i]; i++ ) {
+          if (this.findByName( elements[i].name ).length != undefined && this.findByName( elements[i].name ).length > 1) {
+          for (var cnt = 0; cnt < this.findByName( elements[i].name ).length; cnt++) {
+             this.check( this.findByName( elements[i].name )[cnt] );
+          }
+       } else {
+        this.check( elements[i] );
+      }
+      }
+      return this.valid();
+      }
+     );
+    //Submit the form using AJAX function
+    $('form[data-async]').on('submit', function(event) {
+           doAjaxCall(this); 
+           event.preventDefault();
+     });
+    $('form[data-async-add]').on('submit', function(event) {
+           doAjaxCall(this); 
+           event.preventDefault();
+     });
+     //Handle AJAX call for forms
+     function doAjaxCall(t){
+        var $form = $(t);
+        var $target = $('#datacontainer-modal tbody');
+        $('#resetajax').val(new Date());
+        $.ajax({
+            type: $form.attr('method'),
+            url: $form.attr('action'),
+            data: $form.serialize(),
+            success: function(data, status) {
+              try{  
+                var dataJ =   $.parseJSON(data);
+                var content = '';
+                $.each(dataJ,function(k,v){
+                   content += '<tr><td>';
+                   content += '<input type="checkbox" name="ID[]"';
+                   content += ' value="'+v.ID+ '"></td><td>'; 
+                   content += v.name+'</td><td>';
+                   content += v.comment+'</td></tr>';
+                  });
+                 $target.html(content);
+                 //display record added
+                 if(t.id == 'dialog-form'){
+                  $('.errorno').addClass('error');
+                  $('.errorno').html('Added Record');
+                 }                 
+                }catch(e){
+                 //It's not a json response
+                 content = data;
+                 //TODO:place the data in some window if necessery
+                }
+                  
+            }
+        });
+     } 
+    //Do some customise error for tabel forma and do some validation both forms
+    $('#dialog-form').validate({
+     rules:{
+        "name": {required:true,minlength:4},
+        "comment": {required:true,minlength:4},
+      }
+    });
+    $('#dialog-form-1').validate({
+     rules:{
+        "ID[]": {required:true}
+      },
+       errorElement: "div",
+        wrapper: "div",  
+        errorPlacement: function(error, element) {
+            offset = element.offset();
+            error.insertBefore(element.parent().parent().parent());
+            error.addClass('message');  
+            error.css('position', 'absolute');
+            error.css('width','200px');
+            error.css('left', offset.left + element.outerWidth());
+            error.css('top', offset.top);
+        }  
+    });
+    
+   $('#submitAdd').click(function(){
+     $("#dialog-form").dialog("open");
+      
+    });
+   $('#name').on('focus',function(){
+     $(".errorno").removeClass("error");      
+     $(".errorno").html('Added Record');      
+   });
+   $('#comment').on('focus',function(){
+     $(".errorno").removeClass("error");      
+     $(".errorno").html('Added Record');      
+   });
+   $("#dialog-form").dialog({
+      autoOpen:false,
+      height:400,
+      width:370,
+      modal:true,
+      buttons:{
+        "Add Record":function(){
+           $('#action').val('Add Record');
+           $('form[data-async-add]').submit();     
+            
+         }
+       },
+      close: function(){
+                 $(".errorno").removeClass("error");
+                 $("input.error").removeClass("error");
+                 $("textarea.error").removeClass("error");
+                 $("label.error").remove();
+                 $('#action').val('');
+                 $('#name').val('');
+                 $('#comment').val('');
+             }  
+   });
+   $(document).ready(
+       function(){   
+         $('#action').val('Loading records ...');
+         $('#name').val('Loading records ...');
+         $('#comment').val('Loading records ...');
+         $('form[data-async]').submit();
+         $('#action').val('');
+         $('#name').val('');
+         $('#comment').val('');
+      }
+   );
+   });
+   
+  </script>
+  
+<div class="panel panel-footer">
+ <span> App created by Francisco Velazquez</span>
+</div> 
+</body>
+</html>
